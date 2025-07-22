@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Mi Primer Gemelo Digital con Babylon.js</title>
+    <style>
+        html, body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none; /* Deshabilita el scroll táctil */
+        }
+
+        /* Estilos para el panel de información del hotspot */
+        #infoPanel {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: sans-serif;
+            font-size: 1.1em;
+            display: none; /* Oculto por defecto */
+            z-index: 100;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        #infoPanel h3 {
+            margin-top: 0;
+            color: #4CAF50; /* Un color vibrante para el título */
+        }
+
+        #closeInfo {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    </head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+
+    <div id="infoPanel">
+        <button id="closeInfo">X</button>
+        <h3 id="panelTitle"></h3>
+        <p id="panelContent"></p>
+    </div>
+
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+
+        var createScene = function () {
+            var scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.7, 0.8, 0.9); // Color de fondo claro
+
+            // Cámara ArcRotateCamera (permite orbitar y hacer zoom)
+            var camera = new BABYLON.ArcRotateCamera("camera", BABYLON.Tools.ToRadians(90), BABYLON.Tools.ToRadians(70), 5, BABYLON.Vector3.Zero(), scene);
+            camera.upperRadiusLimit = 20; // Limite el zoom máximo
+            camera.lowerRadiusLimit = 2; // Limite el zoom mínimo
+            camera.attachControl(canvas, true);
+
+            // Luz Hemisférica (luz ambiental general)
+            var light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 0.7; // Intensidad de la luz
+
+            // Otra luz Direccional para añadir sombras o realismo
+            var dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0, -1, 1), scene);
+            dirLight.intensity = 0.3;
+
+            // --- Carga de tu Modelo GLB ---
+            // Asegúrate de que 'mi_modelo.glb' está en la misma carpeta que 'index.html'
+            // O usa una URL completa si está alojado en otro lugar (ej. https://tu_dominio.com/modelos/mi_modelo.glb)
+            BABYLON.SceneLoader.Append("./", "mi_modelo.glb", scene, function (meshes) {
+                console.log("Modelo cargado con éxito:", meshes);
+
+                // Puedes ajustar la posición o escala de tu modelo si es necesario
+                // meshes[0].position = new BABYLON.Vector3(0, 0, 0); // Esto puede variar según tu modelo
+                // meshes[0].scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // Escalar si es muy grande
+
+                // ***** Configuración de hotspots/interacción *****
+                // Identificamos mallas por su nombre (tendrás que ver los nombres de las mallas en tu modelo)
+                // Abre el Playground, carga tu modelo y usa scene.debugLayer.show(); para ver la estructura.
+                var hotspot1Mesh = scene.getMeshByName("nombre_de_una_parte_de_tu_modelo_1"); // ¡CAMBIA ESTO!
+                var hotspot2Mesh = scene.getMeshByName("nombre_de_otra_parte_de_tu_modelo_2"); // ¡CAMBIA ESTO!
+                
+                // Si no conoces los nombres exactos, puedes usar el Inspector de Babylon.js (scene.debugLayer.show())
+                // para ver los nombres de las mallas y su jerarquía.
+
+                // Habilitar un ActionManager para detectar clics
+                scene.actionManager = new BABYLON.ActionManager(scene);
+
+                if (hotspot1Mesh) {
+                    // Crea un material de resaltado si quieres que brille al pasar el ratón
+                    var highlightMaterial = new BABYLON.StandardMaterial("highlightMat1", scene);
+                    highlightMaterial.diffuseColor = new BABYLON.Color3(0, 1, 0); // Verde para resaltado
+
+                    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+                        BABYLON.ActionManager.OnPickTrigger, // Cuando se hace clic
+                        function (evt) {
+                            if (evt.meshClicked === hotspot1Mesh) {
+                                showInfoPanel("Sección Principal", "Esta es la sección de control principal del edificio/instalación.");
+                            }
+                        }
+                    ));
+                    // Opcional: Resaltar al pasar el ratón (hover)
+                    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+                        BABYLON.ActionManager.OnPointerOverTrigger, // Cuando el ratón pasa por encima
+                        function (evt) {
+                            if (evt.meshUnderPointer === hotspot1Mesh) {
+                                hotspot1Mesh._originalMaterial = hotspot1Mesh.material; // Guarda el material original
+                                hotspot1Mesh.material = highlightMaterial; // Aplica el material de resaltado
+                            }
+                        }
+                    ));
+                    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+                        BABYLON.ActionManager.OnPointerOutTrigger, // Cuando el ratón sale
+                        function (evt) {
+                            if (evt.meshUnderPointer === hotspot1Mesh && hotspot1Mesh._originalMaterial) {
+                                hotspot1Mesh.material = hotspot1Mesh._originalMaterial; // Restaura el material original
+                            }
+                        }
+                    ));
+                }
+
+                if (hotspot2Mesh) {
+                    var highlightMaterial2 = new BABYLON.StandardMaterial("highlightMat2", scene);
+                    highlightMaterial2.diffuseColor = new BABYLON.Color3(1, 0.5, 0); // Naranja para resaltado
+
+                    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+                        BABYLON.ActionManager.OnPickTrigger,
+                        function (evt) {
+                            if (evt.meshClicked === hotspot2Mesh) {
+                                showInfoPanel("Zona de Equipos", "Aquí se encuentran los servidores y la infraestructura crítica.");
+                            }
+                        }
+                    ));
+                    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+                        BABYLON.ActionManager.OnPointerOverTrigger,
+                        function (evt) {
+                            if (evt.meshUnderPointer === hotspot2Mesh) {
+                                hotspot2Mesh._originalMaterial = hotspot2Mesh.material;
+                                hotspot2Mesh.material = highlightMaterial2;
+                            }
+                        }
+                    ));
+                    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+                        BABYLON.ActionManager.OnPointerOutTrigger,
+                        function (evt) {
+                            if (evt.meshUnderPointer === hotspot2Mesh && hotspot2Mesh._originalMaterial) {
+                                hotspot2Mesh.material = hotspot2Mesh._originalMaterial;
+                            }
+                        }
+                    ));
+                }
+
+                // Puedes añadir más hotspots siguiendo el mismo patrón para otras partes de tu modelo
+            });
+
+            return scene;
+        };
+
+        var scene = createScene(); // Llama a la función para crear la escena
+
+        // El bucle de renderizado: dibuja la escena constantemente
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Ajusta el tamaño del canvas si se cambia el tamaño de la ventana del navegador
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+
+        // --- Funciones para el panel de información ---
+        var infoPanel = document.getElementById("infoPanel");
+        var panelTitle = document.getElementById("panelTitle");
+        var panelContent = document.getElementById("panelContent");
+        var closeInfoButton = document.getElementById("closeInfo");
+
+        function showInfoPanel(title, content) {
+            panelTitle.innerText = title;
+            panelContent.innerText = content;
+            infoPanel.style.display = "block"; // Muestra el panel
+        }
+
+        closeInfoButton.onclick = function() {
+            infoPanel.style.display = "none"; // Oculta el panel al hacer clic en la X
+        };
+
+    </script>
+</body>
+</html>
