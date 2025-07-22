@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    scene.debugLayer.show();
     <meta charset="utf-8">
     <title>Mi Primer Gemelo Digital con Babylon.js</title>
     <style>
@@ -72,6 +71,8 @@
             var scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.7, 0.8, 0.9); // Color de fondo claro
 
+            scene.debugLayer.show();
+            
             // Cámara ArcRotateCamera (permite orbitar y hacer zoom)
             var camera = new BABYLON.ArcRotateCamera("camera", BABYLON.Tools.ToRadians(90), BABYLON.Tools.ToRadians(70), 5, BABYLON.Vector3.Zero(), scene);
             camera.upperRadiusLimit = 20; // Limite el zoom máximo
