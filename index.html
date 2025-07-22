@@ -91,6 +91,29 @@
             BABYLON.SceneLoader.Append("./", "modelo.glb", scene, function (meshes) {
                 console.log("Modelo cargado con éxito:", meshes);
 
+                // --- PRUEBA ESTAS LÍNEAS ---
+
+    // 1. Escalar el modelo (muy común para ajustar el tamaño a la escena)
+    // Si tu modelo es MUY GRANDE, prueba a reducirlo (0.01 = 1% del tamaño original)
+    // Si tu modelo es MUY PEQUEÑO, prueba a aumentarlo (10 = 10 veces el tamaño original)
+    // Puedes probar con 0.1, 0.01, 0.001 o 10, 100, 1000 hasta que lo veas.
+    meshes[0].scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
+
+    // 2. Posicionar el modelo (si no está centrado o está hundido/elevado)
+    // Esto lo centrará en el origen (0,0,0) de la escena.
+    // Si tu modelo necesita estar un poco elevado sobre el "suelo" (ej. el agua para SATH),
+    // puedes probar con un valor positivo en Y (ej. 0, 2, 0).
+    meshes[0].position = new BABYLON.Vector3(0, 0, 0);
+
+    // 3. Opcional: Ajustar la cámara inicial si tu modelo es grande o alto
+    // Si incluso escalando, el modelo no se ve bien o se corta, puedes alejar la cámara inicial.
+    // Busca esta línea más arriba en tu código (fuera de esta función de carga):
+    // var camera = new BABYLON.ArcRotateCamera("camera", BABYLON.Tools.ToRadians(90), BABYLON.Tools.ToRadians(70), 5, BABYLON.Vector3.Zero(), scene);
+    // Cambia el '5' (distancia de la cámara) a un valor más grande, como '20' o '30'.
+
+    // --- FIN DE PRUEBAS ---
+
+                
                 // Puedes ajustar la posición o escala de tu modelo si es necesario
                 // meshes[0].position = new BABYLON.Vector3(0, 0, 0); // Esto puede variar según tu modelo
                 // meshes[0].scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // Escalar si es muy grande
