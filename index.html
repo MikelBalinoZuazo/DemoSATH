@@ -66,9 +66,9 @@
         // Cargamos tu modelo 3D.
         // "./" indica la misma carpeta que este HTML.
         // "SATH.glb" es el nombre exacto de tu archivo GLB. ¡Asegúrate de que sea correcto y con la misma capitalización!
-        BABYLON.SceneLoader.Append("./", "SATH.glb", scene, (loadedMeshes) => {
+        BABYLON.SceneLoader.Append("./", "modelo.glb", scene, (loadedMeshes) => {
             // Este mensaje aparecerá en la consola si el modelo se carga correctamente
-            console.log("¡ÉXITO! Modelo 'SATH.glb' cargado.");
+            console.log("¡ÉXITO! Modelo 'modelo.glb' cargado.");
             console.log("Número de mallas cargadas:", loadedMeshes.length);
 
             // Una vez que el modelo se ha cargado, ajustamos la cámara para encuadrarlo.
