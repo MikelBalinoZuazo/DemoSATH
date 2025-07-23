@@ -31,82 +31,63 @@
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     
     <script>
-        // Obtenemos el elemento canvas del HTML
         const canvas = document.getElementById("renderCanvas");
-        // Creamos el motor de renderizado de Babylon.js
         const engine = new BABYLON.Engine(canvas, true);
-        // Creamos la escena 3D donde vivirán nuestros objetos
         const scene = new BABYLON.Scene(engine);
 
-        // Creamos una cámara ArcRotateCamera. Es ideal para ver modelos 3D, ya que puedes rotar alrededor de un punto.
         const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
-        // Adjuntamos el control de la cámara al canvas para que el usuario pueda interactuar con ella
         camera.attachControl(canvas, true);
 
-        // Configurar límites de zoom más amplios para la cámara
-        camera.upperRadiusLimit = 5000; // Permite alejarse mucho
-        camera.lowerRadiusLimit = 0.1;  // Permite acercarse mucho
-        camera.wheelPrecision = 0.5;    // Ajusta la sensibilidad del zoom
+        camera.upperRadiusLimit = 5000;
+        camera.lowerRadiusLimit = 0.1;
+        camera.wheelPrecision = 0.5;
 
-        // Creamos una luz HemisphericLight para iluminar la escena de forma general
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-        light.intensity = 0.7; // Ajusta la intensidad de la luz
+        light.intensity = 0.7;
 
-        // Opcional: una luz direccional para mejor sombreado
         const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0, -1, 1), scene);
         dirLight.intensity = 0.3;
 
-        // Evitamos que la rueda del ratón haga scroll en la página cuando se usa sobre el canvas
         canvas.addEventListener("wheel", function (event) {
             event.preventDefault();
-        }, { passive: false }); // 'passive: false' es crucial para que preventDefault funcione
+        }, { passive: false });
 
-        // Cargamos tu modelo 3D.
         BABYLON.SceneLoader.Append("./", "modelo.glb", scene, (loadedMeshes, particleSystems, skeletons, animationGroups) => {
-            // Este mensaje aparecerá en la consola si el modelo se carga correctamente
             console.log("¡ÉXITO! Modelo 'modelo.glb' cargado.");
             
             // Asignar un material blanco a todas las mallas del modelo cargado.
-            // Iteramos solo sobre las mallas que acabamos de cargar.
             loadedMeshes.forEach(mesh => {
-                // Creamos un nuevo material blanco para cada malla o reasignamos si ya tiene uno
                 const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
-                whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // Color blanco puro
-                // Opcional: para un blanco más mate (sin brillo metálico), puedes ajustar el color especular:
+                whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
                 whiteMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1); 
                 mesh.material = whiteMaterial;
             });
 
-            // Ajustamos la cámara para encuadrar el modelo después de cargarlo
-            // Esto es crucial para que el modelo sea visible de inmediato y ocupe bien la vista.
-            // Si ya tienes un target específico para la cámara, lo puedes usar aquí.
-            // Por ejemplo, para centrar la cámara en el bounding box del modelo:
-            const boundingInfo = scene.get
-            scene.createDefaultCameraOrLight(true, true, true); // Esto lo quito porque crea su propia cámara
-            
-            // Si quieres que la cámara se ajuste automáticamente para encuadrar el modelo,
-            // puedes usar un Bounding Box de la escena o del modelo cargado.
-            // Una forma simple es reiniciar el target de la cámara o ajustar su radio.
-            // Podrías calcular el centro de todas las mallas cargadas:
-            const center = BABYLON.BoundingInfo.CreateFromMeshes(loadedMeshes).center;
-            camera.setTarget(center);
-            
-            // Para ajustar el radio de la cámara y que encuadre el modelo, podrías hacer algo como:
-            // (Esto es más avanzado y podría requerir calcular el tamaño del modelo)
-            // Por ahora, con el target ya debería verse centrado.
+            // --- INICIO DE LA CORRECCIÓN ---
+            // Ajustar la cámara para encuadrar el modelo
+            if (loadedMeshes.length > 0) {
+                // Obtenemos la caja delimitadora (bounding box) de todas las mallas cargadas
+                const boundingInfo = BABYLON.BoundingInfo.CreateFromMeshes(loadedMeshes);
+                const modelCenter = boundingInfo.center;
+                const modelRadius = boundingInfo.boundingSphere.radius;
+
+                // Centrar la cámara en el modelo
+                camera.setTarget(modelCenter);
+
+                // Ajustar el radio de la cámara para que el modelo se vea bien
+                // Un multiplicador de 2 o 3 suele funcionar bien para encuadrar
+                camera.radius = modelRadius * 2.5; 
+            }
+            // --- FIN DE LA CORRECCIÓN ---
             
         }, null, (scene, message, exception) => {
-            // Este callback se ejecuta si hay un error al cargar el modelo.
             console.error("ERROR al cargar el modelo GLB:", message, exception);
         });
 
-        // Este es el bucle principal de renderizado.
         engine.runRenderLoop(() => {
             scene.render();
         });
 
-        // Manejamos el evento de redimensionamiento de la ventana del navegador.
-        // Esto asegura que el canvas de Babylon.js se ajuste al nuevo tamaño.
         window.addEventListener("resize", () => {
             engine.resize();
         });
