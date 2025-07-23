@@ -62,32 +62,39 @@
         }, { passive: false }); // 'passive: false' es crucial para que preventDefault funcione
 
         // Cargamos tu modelo 3D.
-        // "./" indica la misma carpeta que este HTML.
-        // "modelo.glb" es el nombre exacto de tu archivo GLB. ¡Asegúrate de que sea correcto!
-        BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
+        BABYLON.SceneLoader.Append("./", "modelo.glb", scene, (loadedMeshes, particleSystems, skeletons, animationGroups) => {
             // Este mensaje aparecerá en la consola si el modelo se carga correctamente
             console.log("¡ÉXITO! Modelo 'modelo.glb' cargado.");
-            // NOTA: Para este método de aplicar el blanco, no necesitamos el 'loadedMeshes' directamente aquí.
-
-            // Una vez que el modelo se ha cargado, ajustamos la cámara para encuadrarlo.
-            // Esto es crucial para que el modelo sea visible de inmediato y ocupe bien la vista.
-            scene.activeCamera = camera; // Nos aseguramos de que nuestra cámara es la que se usa
-            scene.createDefaultCameraOrLight(true, true, true); // Ajusta la cámara, añade luces (si no hay) y un suelo (opcional)
-
-            // Asignar un material blanco a todas las mallas en la escena.
-            // Este método itera sobre TODAS las mallas actualmente en la escena,
-            // incluyendo las de tu modelo recién cargado y potencialmente el "ground" de Babylon.js.
-            scene.meshes.forEach(mesh => {
-                // Solo aplicamos el material blanco si la malla tiene un material y no es el "ground" generado por Babylon.js.
-                if (mesh.material && mesh.name !== "ground") { 
-                    const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
-                    whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // Color blanco puro
-                    // Opcional: para un blanco más mate (sin brillo metálico), puedes ajustar el color especular:
-                    // whiteMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1); 
-                    mesh.material = whiteMaterial;
-                }
+            
+            // Asignar un material blanco a todas las mallas del modelo cargado.
+            // Iteramos solo sobre las mallas que acabamos de cargar.
+            loadedMeshes.forEach(mesh => {
+                // Creamos un nuevo material blanco para cada malla o reasignamos si ya tiene uno
+                const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
+                whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // Color blanco puro
+                // Opcional: para un blanco más mate (sin brillo metálico), puedes ajustar el color especular:
+                whiteMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1); 
+                mesh.material = whiteMaterial;
             });
 
+            // Ajustamos la cámara para encuadrar el modelo después de cargarlo
+            // Esto es crucial para que el modelo sea visible de inmediato y ocupe bien la vista.
+            // Si ya tienes un target específico para la cámara, lo puedes usar aquí.
+            // Por ejemplo, para centrar la cámara en el bounding box del modelo:
+            const boundingInfo = scene.get
+            scene.createDefaultCameraOrLight(true, true, true); // Esto lo quito porque crea su propia cámara
+            
+            // Si quieres que la cámara se ajuste automáticamente para encuadrar el modelo,
+            // puedes usar un Bounding Box de la escena o del modelo cargado.
+            // Una forma simple es reiniciar el target de la cámara o ajustar su radio.
+            // Podrías calcular el centro de todas las mallas cargadas:
+            const center = BABYLON.BoundingInfo.CreateFromMeshes(loadedMeshes).center;
+            camera.setTarget(center);
+            
+            // Para ajustar el radio de la cámara y que encuadre el modelo, podrías hacer algo como:
+            // (Esto es más avanzado y podría requerir calcular el tamaño del modelo)
+            // Por ahora, con el target ya debería verse centrado.
+            
         }, null, (scene, message, exception) => {
             // Este callback se ejecuta si hay un error al cargar el modelo.
             console.error("ERROR al cargar el modelo GLB:", message, exception);
