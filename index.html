@@ -40,8 +40,9 @@
 
   // Creamos material blanco único para todo el modelo
   const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
-  whiteMaterial.diffuseColor = new BABYLON.Color3(1,1,1);
-  whiteMaterial.specularColor = new BABYLON.Color3(0,0,0);
+  whiteMaterial.diffuseColor = new BABYLON.Color3(0,0,0); // Sin brillos especulares
+  whiteMaterial.reflectionTexture = null;                 // Sin reflejos
+  whiteMaterial.specularColor = new BABYLON.Color3(1,1,1);
   whiteMaterial.emissiveColor = new BABYLON.Color3(1,1,1); // para iluminarlo bien
   whiteMaterial.disableLighting = false;
 
