@@ -53,19 +53,19 @@
         BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
             console.log("¡ÉXITO! Modelo 'modelo.glb' cargado.");
 
-            // Crear un único material blanco
-            const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
-            whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
-            whiteMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1); // Blanco mate
+            // Crear un material blanco mate con PBR (más realista y compatible con modelos modernos)
+            const whitePBR = new BABYLON.PBRMaterial("whitePBR", scene);
+            whitePBR.albedoColor = new BABYLON.Color3(1, 1, 1); // Blanco puro
+            whitePBR.metallic = 0;  // No metálico
+            whitePBR.roughness = 1; // Sin brillo
 
-            // Aplicar el material blanco a todas las mallas que tengan material y no sean el suelo
+            // Aplicar el material a todas las mallas excepto el "ground"
             scene.meshes.forEach(mesh => {
-                if (mesh.material && mesh.name !== "ground") {
-                    mesh.material = whiteMaterial;
+                if (mesh.name !== "ground") {
+                    mesh.material = whitePBR;
                 }
             });
 
-            // Asegurar cámara y luz por defecto
             scene.createDefaultCameraOrLight(true, true, true);
             scene.activeCamera = camera;
         }, null, (scene, message, exception) => {
