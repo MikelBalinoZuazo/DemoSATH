@@ -65,31 +65,31 @@
 
         // Cargamos tu modelo 3D.
         // "./" indica la misma carpeta que este HTML.
-        // "SATH.glb" es el nombre exacto de tu archivo GLB. ¡Asegúrate de que sea correcto y con la misma capitalización!
+        // "modelo.glb" es el nombre exacto de tu archivo GLB. ¡Asegúrate de que sea correcto!
         BABYLON.SceneLoader.Append("./", "modelo.glb", scene, (loadedMeshes) => {
             // Este mensaje aparecerá en la consola si el modelo se carga correctamente
             console.log("¡ÉXITO! Modelo 'modelo.glb' cargado.");
             console.log("Número de mallas cargadas:", loadedMeshes.length);
+
+            // Creamos un material blanco que se aplicará a todas las mallas
+            const forcedWhiteMaterial = new BABYLON.StandardMaterial("forcedWhiteMat", scene);
+            forcedWhiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // Blanco puro
+            // Opcional: para un blanco más mate, puedes ajustar el color especular:
+            // forcedWhiteMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1); 
+
+            // Recorremos *TODAS* las mallas que pertenecen al modelo que acabamos de cargar
+            // y les aplicamos este nuevo material blanco. Esto sobrescribe cualquier material original.
+            loadedMeshes.forEach(mesh => {
+                mesh.material = forcedWhiteMaterial;
+            });
 
             // Una vez que el modelo se ha cargado, ajustamos la cámara para encuadrarlo.
             // Esto es crucial para que el modelo sea visible de inmediato y ocupe bien la vista.
             scene.activeCamera = camera; // Nos aseguramos de que nuestra cámara es la que se usa
             scene.createDefaultCameraOrLight(true, true, true); // Ajusta la cámara, añade luces (si no hay) y un suelo (opcional)
 
-            // Opcional: Asignar un material blanco a todas las mallas del modelo
-            // Si tu modelo ya tiene buenos materiales y quieres usarlos, ELIMINA las siguientes 6 líneas.
-            scene.meshes.forEach(mesh => {
-                // Evitamos aplicar material blanco al suelo que Babylon.js podría haber creado
-                if (mesh.material && mesh.name !== "ground") { 
-                    const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
-                    whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // Color blanco puro
-                    mesh.material = whiteMaterial;
-                }
-            });
-
         }, null, (scene, message, exception) => {
             // Este callback se ejecuta si hay un error al cargar el modelo.
-            // Si ves este mensaje en la consola, copia el error completo aquí.
             console.error("ERROR al cargar el modelo GLB:", message, exception);
         });
 
