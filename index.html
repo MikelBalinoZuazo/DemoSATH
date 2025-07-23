@@ -1,93 +1,220 @@
-<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digital Twin - Modelo SATH (Corregido)</title>
+    
+    <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.min.js"></script>
+    
+    <style>
+        html, body {
+            overflow: hidden; margin: 0; padding: 0; height: 100%; width: 100%; font-family: sans-serif; background-color: #f0f0f0;
+        }
+        #renderCanvas {
+            width: 100%; height: 100%; display: block; touch-action: none;
+        }
+        .ui-button {
+            position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.6); color: white; border: none; padding: 10px 15px; font-size: 16px; cursor: pointer; border-radius: 5px; z-index: 10;
+        }
+        #infoPanel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.85); color: white; padding: 25px; border-radius: 10px; font-size: 1.1em; display: none; z-index: 100; max-width: 450px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+        #infoPanel h3 {
+            margin-top: 0; color: #72E06E; font-size: 1.6em; margin-bottom: 15px;
+        }
+        #infoPanel p {
+            line-height: 1.6; margin-bottom: 20px;
+        }
+        #closeInfo {
+            position: absolute; top: 10px; right: 15px; background: none; border: none; color: white; font-size: 1.8em; cursor: pointer;
+        }
+        #closeInfo:hover {
+            color: #FF6B6B;
+        }
+    </style>
+</head>
+<body>
 
-  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <canvas id="renderCanvas"></canvas>
+    <button class="ui-button" onclick="resetCamera()">Reset View</button>
+    <div id="infoPanel">
+        <button id="closeInfo">X</button>
+        <h3 id="panelTitle"></h3>
+        <p id="panelContent"></p>
+    </div>
 
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+        const scene = new BABYLON.Scene(engine);
+        scene.clearColor = new BABYLON.Color3(0.7, 0.8, 0.9);
 
+        // --- Variables Globales ---
+        let camera;
+        let initialCameraState = {}; // Objeto para guardar el estado inicial de la cámara
 
+        // --- Cámara Principal ---
+        camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 15, BABYLON.Vector3.Zero(), scene);
+        camera.attachControl(canvas, true);
+        camera.upperRadiusLimit = 5000;
+        camera.lowerRadiusLimit = 0.1;
+        camera.wheelPrecision = 50; // Ajustado para un zoom más estándar
 
+        // --- Luces ---
+        const light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+        light.intensity = 1.0; // Un poco más de luz ambiental
+        const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0.5, -1, 0.5), scene);
+        dirLight.intensity = 0.5;
 
-const canvas = document.getElementById("renderCanvas");
+        // --- Función para resetear la cámara ---
+        function resetCamera() {
+            if (initialCameraState.target) {
+                camera.setTarget(initialCameraState.target);
+                camera.alpha = initialCameraState.alpha;
+                camera.beta = initialCameraState.beta;
+                camera.radius = initialCameraState.radius;
+            } else {
+                console.warn("El estado inicial de la cámara no está guardado.");
+            }
+        }
 
-    const engine = new BABYLON.Engine(canvas, true);
+        // --- Carga del Modelo 3D (GLB) ---
+        BABYLON.SceneLoader.Append("./", "modelo.glb", scene, function (loadedScene) {
+            console.log("Modelo 'modelo.glb' cargado con éxito.");
 
-    const scene = new BABYLON.Scene(engine);
+            // **CAMBIO CLAVE: Ajuste manual y fiable de la cámara**
+            // 1. Obtener los límites de todas las mallas cargadas
+            const worldExtends = loadedScene.getWorldExtends();
+            // 2. Apuntar la cámara al centro del modelo
+            camera.setTarget(worldExtends.center);
+            // 3. Ajustar el zoom para que el modelo entero quepa en la vista
+            camera.radius = worldExtends.max.subtract(worldExtends.min).length() * 1.5;
 
+            // Guardamos este estado como el inicial para el botón de reset
+            initialCameraState = {
+                target: camera.target.clone(),
+                alpha: camera.alpha,
+                beta: camera.beta,
+                radius: camera.radius
+            };
 
+            // **CAMBIO DE EFICIENCIA: Crear un solo material y reutilizarlo**
+            const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
+            whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+            
+            // Opcional: Asignar el material blanco. Comenta este bloque si quieres usar los materiales originales.
+            scene.meshes.forEach(mesh => {
+                // Solo aplicar si es una malla visible y no una "caja contenedora" invisible
+                if (mesh.id !== "__root__" && mesh.getTotalVertices() > 0) {
+                     mesh.material = whiteMaterial;
+                }
+            });
 
-    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
+            // --- Lógica para Hotspots / Interacciones ---
+            setupHotspots();
 
-    camera.attachControl(canvas, true);
+            // **CAMBIO DE DEPURACIÓN: Activar el Inspector de Babylon.js**
+            // Tecla `i` para mostrar/ocultar. Te permitirá ver todas las mallas y sus nombres.
+            window.addEventListener("keydown", (ev) => {
+                if (ev.key === 'i') {
+                    if (scene.debugLayer.isVisible()) {
+                        scene.debugLayer.hide();
+                    } else {
+                        scene.debugLayer.show({ embedMode: true });
+                    }
+                }
+            });
+            console.log("Pulsa la tecla 'i' para abrir el Inspector y encontrar los nombres de tus mallas.");
 
+        }, null, function (scene, message, exception) {
+            console.error("Error al cargar el modelo 'modelo.glb':", message, exception);
+            alert("No se pudo cargar el modelo 'modelo.glb'.\nRevisa la consola del navegador (F12) para ver los detalles del error.\nAsegúrate de que el archivo está en la misma carpeta que el HTML.");
+        });
 
+        function setupHotspots() {
+            // Elementos del panel de información
+            const infoPanel = document.getElementById("infoPanel");
+            const panelTitle = document.getElementById("panelTitle");
+            const panelContent = document.getElementById("panelContent");
+            const closeInfoButton = document.getElementById("closeInfo");
+            
+            if (closeInfoButton) {
+                closeInfoButton.onclick = () => infoPanel.style.display = "none";
+            }
 
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            function showInfoPanel(title, content) {
+                panelTitle.innerText = title;
+                panelContent.innerText = content;
+                infoPanel.style.display = "block";
+            }
 
+            // Crear materiales de resaltado
+            const highlightMaterialA = new BABYLON.StandardMaterial("highlightMatA", scene);
+            highlightMaterialA.diffuseColor = new BABYLON.Color3(0, 1, 0); // Verde
+            highlightMaterialA.emissiveColor = new BABYLON.Color3(0.2, 0.4, 0.2); // Un ligero brillo propio
 
+            const highlightMaterialB = new BABYLON.StandardMaterial("highlightMatB", scene);
+            highlightMaterialB.diffuseColor = new BABYLON.Color3(1, 0.5, 0); // Naranja
+            highlightMaterialB.emissiveColor = new BABYLON.Color3(0.4, 0.2, 0);
 
-    const initialAlpha = camera.alpha, initialBeta = camera.beta, initialRadius = camera.radius, initialTarget = camera.target.clone();
+            // --- Configuración de acciones ---
+            scene.actionManager = new BABYLON.ActionManager(scene);
 
+            // ¡IMPORTANTE! Cambia estos nombres por los nombres reales de tus mallas
+            const meshNames = {
+                hotspotA: "nombre_de_tu_malla_1", // Por ejemplo, "BaseTurbine"
+                hotspotB: "nombre_de_tu_malla_2"  // Por ejemplo, "Blade_R"
+            };
 
+            const meshA = scene.getMeshByName(meshNames.hotspotA);
+            const meshB = scene.getMeshByName(meshNames.hotspotB);
+            
+            // Función auxiliar para registrar las 3 acciones (clic, hover, out)
+            const registerHotspotActions = (mesh, highlightMaterial, title, content) => {
+                if (!mesh) {
+                    console.warn(`Hotspot '${mesh.name}' no encontrado. Revisa el nombre en el GLB.`);
+                    return;
+                }
+                
+                let originalMaterial = mesh.material;
 
-    function resetCamera() {
+                // Acción al hacer clic
+                mesh.actionManager = new BABYLON.ActionManager(scene);
+                mesh.actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+                        showInfoPanel(title, content);
+                    })
+                );
 
-      camera.setTarget(initialTarget);
+                // Acción al pasar el ratón por encima
+                mesh.actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPointerOverTrigger, () => {
+                        mesh.material = highlightMaterial;
+                        canvas.style.cursor = "pointer";
+                    })
+                );
+                
+                // Acción al quitar el ratón
+                mesh.actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPointerOutTrigger, () => {
+                        mesh.material = originalMaterial;
+                        canvas.style.cursor = "default";
+                    })
+                );
+            };
 
-      camera.alpha = initialAlpha;
+            // Registrar acciones para cada hotspot
+            registerHotspotActions(meshA, highlightMaterialA, "Sección Principal del SATH", "Esta es la sección de control principal del SATH. Monitoriza los sistemas críticos y la generación de energía.");
+            registerHotspotActions(meshB, highlightMaterialB, "Palas de Turbina", "Las palas están diseñadas para capturar la energía del viento de manera eficiente y convertirla en rotación.");
+        }
 
-      camera.beta = initialBeta;
+        // --- Bucle de renderizado y redimensionamiento ---
+        engine.runRenderLoop(() => scene.render());
+        window.addEventListener("resize", () => engine.resize());
 
-      camera.radius = initialRadius;
-
-    }
-
-
-
-    canvas.addEventListener("wheel", function (event) {
-
-      event.preventDefault();
-
-    }, { passive: false });
-
-
-
-    BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
-
-      scene.createDefaultCameraOrLight(true, true, true);
-
-      scene.meshes.forEach(mesh => {
-
-        if (mesh.material) {
-
-          const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
-
-          whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
-
-          mesh.material = whiteMaterial;
-
-        }
-
-      });
-
-    });
-
-
-
-    engine.runRenderLoop(() => {
-
-      scene.render();
-
-    });
-
-
-
-    window.addEventListener("resize", () => {
-
-      engine.resize();
-
-    });
-
-  </script>
-
+    </script>
 </body>
-
 </html>
