@@ -3,258 +3,256 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Digital Twin - Modelo SATH (Corregido)</title>
-    
-    <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.min.js"></script>
-    
+    <title>Mikel Baliño Zuazo | Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <meta name="description" content="Portfolio of Mikel Baliño Zuazo, Draftsman specialized in CAD design, 3D and BIM. Discover engineering projects and 3D models.">
+
     <style>
+        /* Estilos generales para el HTML */
         html, body {
-            overflow: hidden; margin: 0; padding: 0; height: 100%; width: 100%; font-family: sans-serif; background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden; /* Evita scroll horizontal general */
         }
+        /* Estilos específicos para el canvas de Babylon.js */
         #renderCanvas {
-            width: 100%; height: 100%; display: block; touch-action: none;
+            width: 100%;
+            height: 500px; /* Puedes ajustar esta altura según tus necesidades */
+            display: block;
+            border: 1px solid #ccc;
+            margin-top: 1rem;
+            touch-action: none; /* Importante para el control de la cámara en dispositivos táctiles */
         }
+        /* Estilos para el botón de "Reset View" */
         .ui-button {
-            position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.6); color: white; border: none; padding: 10px 15px; font-size: 16px; cursor: pointer; border-radius: 5px; z-index: 10;
+            position: absolute;
+            top: 20px; /* Ajusta según la posición de tu canvas */
+            left: 20px; /* Ajusta según la posición de tu canvas */
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            z-index: 10; /* Asegura que el botón esté sobre el canvas */
         }
+        /* Estilos para el selector de idioma */
+        .language-selector {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 999;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        /* Estilos para el panel de información del hotspot (si lo vas a usar, sino puedes eliminarlo) */
         #infoPanel {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.85); color: white; padding: 25px; border-radius: 10px; font-size: 1.1em; display: none; z-index: 100; max-width: 450px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: sans-serif;
+            font-size: 1.1em;
+            display: none;
+            z-index: 100;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         #infoPanel h3 {
-            margin-top: 0; color: #72E06E; font-size: 1.6em; margin-bottom: 15px;
+            margin-top: 0;
+            color: #4CAF50;
+            font-size: 1.5em;
         }
         #infoPanel p {
-            line-height: 1.6; margin-bottom: 20px;
+            margin-bottom: 15px;
+            line-height: 1.5;
         }
         #closeInfo {
-            position: absolute; top: 10px; right: 15px; background: none; border: none; color: white; font-size: 1.8em; cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8em;
+            cursor: pointer;
+            padding: 5px;
         }
         #closeInfo:hover {
-            color: #FF6B6B;
+            color: #ff4d4d;
+        }
+        .animation-gif {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
-
-    <canvas id="renderCanvas"></canvas>
-    <button class="ui-button" onclick="resetCamera()">Reset View</button>
-    <div id="infoPanel">
-        <button id="closeInfo">X</button>
-        <h3 id="panelTitle"></h3>
-        <p id="panelContent"></p>
+    <div style="background-color: #ffd700; color: #000; padding: 10px; text-align: center; font-weight: 500;">
+        ⚠️ This website is currently under development. Some sections might be incomplete.
+        <br>⚠️ Esta página web está en desarrollo. Algunas secciones pueden estar incompletas.
+        <br>⚠️ Webgune hau oraindik garatzen ari da. Atal batzuk osatu gabe egon daitezke.
     </div>
+
+    <div class="language-selector">
+        <select id="language" onchange="changeLanguage()">
+            <option value="en" selected>English</option>
+            <option value="es">Castellano</option>
+            <option value="eu">Euskera</option>
+        </select>
+    </div>
+
+    <header class="hero">
+        <div class="profile">
+            <img src="images/foto.jpeg" alt="Mikel Baliño Zuazo" class="profile-img" />
+            <h1>Mikel Baliño Zuazo</h1>
+            <p data-i18n="subtitle">Engineering Draftsman · 3D Designer · BIM Specialist</p>
+        </div>
+    </header>
+
+    <section class="about" id="about">
+        <h2 data-i18n="about_title">About me</h2>
+        <p data-i18n="about_text"></p>
+    </section>
+
+    <section class="what" id="what">
+        <h2 data-i18n="what_title">What you will find here</h2>
+        <p data-i18n="what_text"></p>
+    </section>
+
+    <section class="toc" id="toc">
+        <h2 data-i18n="toc_title">Table of Contents</h2>
+        <ul>
+            <li><a href="#cad" data-i18n="cad_link">CAD Drawings</a></li>
+            <li><a href="#3d-models" data-i18n="models_link">3D Models</a></li>
+            <li><a href="#renders" data-i18n="renders_link">Renders</a></li>
+            <li><a href="#animations" data-i18n="animations_link">Animations</a></li>
+        </ul>
+    </section>
+
+    <section id="cad">
+        <h2 data-i18n="cad_title">CAD Drawings</h2>
+        <p data-i18n="cad_text"></p>
+    </section>
+
+    <section id="3d-models">
+        <h2 data-i18n="models_title">3D Models</h2>
+        <p data-i18n="models_text"></p>
+
+        <canvas id="renderCanvas"></canvas>
+        <button class="ui-button" onclick="resetCamera()" data-i18n="reset_btn">Reset View</button>
+    </section>
+
+    <section id="renders">
+        <h2 data-i18n="renders_title">Renders</h2>
+        <p data-i18n="renders_text"></p>
+    </section>
+
+    <section id="animations">
+        <h2 data-i18n="animations_title">Animations</h2>
+        <p data-i18n="animations_text"></p>
+
+        <h3 data-i18n="example_animation">Example Animation</h3>
+        <img src="images/Frame.gif" alt="Example Animation" class="animation-gif" />
+        <p data-i18n="animation_description"></p>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Mikel Baliño Zuazo · Portfolio · <a href="https://www.linkedin.com/in/mikel-bali%C3%B1o-zuazo-697447153/" target="_blank" data-i18n="social_link">Social network</a></p>
+    </footer>
 
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true);
-        const scene = new BABYLON.Scene(engine);
-        scene.clearColor = new BABYLON.Color3(0.7, 0.8, 0.9);
-
-        // --- Variables Globales ---
-        let camera;
-        let initialCameraState = {}; // Objeto para guardar el estado inicial de la cámara
-
-        // --- Cámara Principal ---
-        camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 15, BABYLON.Vector3.Zero(), scene);
-        camera.attachControl(canvas, true);
-        camera.upperRadiusLimit = 5000;
-        camera.lowerRadiusLimit = 0.1;
-        camera.wheelPrecision = 50; // Ajustado para un zoom más estándar
-
-        // --- Luces ---
-        const light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-        light.intensity = 1.0; // Un poco más de luz ambiental
-        const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0.5, -1, 0.5), scene);
-        dirLight.intensity = 0.5;
-
-        // --- Función para resetear la cámara ---
-        function resetCamera() {
-            if (initialCameraState.target) {
-                camera.setTarget(initialCameraState.target);
-                camera.alpha = initialCameraState.alpha;
-                camera.beta = initialCameraState.beta;
-                camera.radius = initialCameraState.radius;
-            } else {
-                console.warn("El estado inicial de la cámara no está guardado.");
+        // --- Objeto de traducciones para tu portfolio (tal como lo tenías) ---
+        const translations = {
+            en: {
+                subtitle: "Engineering Draftsman · 3D Designer · BIM Specialist",
+                about_title: "About me",
+                about_text: "I am a professional draftsman with expertise in CAD drawing, 3D modeling, rendering, and animation. I specialize in using Rhino, Grasshopper, AutoCAD, and BIM tools to bring engineering and architectural concepts to life with precision and creativity.",
+                what_title: "What you will find here",
+                what_text: "This page is not intended to be a professional portfolio; therefore, you won’t find detailed information about the projects I have worked on. Instead, it serves as a showroom of the different skills I have been developing.",
+                toc_title: "Table of Contents",
+                cad_link: "CAD Drawings",
+                models_link: "3D Models",
+                renders_link: "Renders",
+                animations_link: "Animations",
+                cad_title: "CAD Drawings",
+                cad_text: "Examples of technical 2D drawings made in AutoCAD and other drafting tools.",
+                models_title: "3D Models",
+                models_text: "Interactive 3D model. You can rotate, zoom, and explore the model below.",
+                renders_title: "Renders",
+                renders_text: "Photorealistic renders showcasing lighting, materials, and composition.",
+                animations_title: "Animations",
+                animations_text: "Animated representations of real scenarios using collected data.",
+                example_animation: "Example Animation",
+                animation_description: "In this example Grasshopper has been used to make a GIF of the real movement of a ferris wheel. With this, it is pretended to demonstrate the utility of this tool when it comes to expressing operating ideas to third parties.",
+                reset_btn: "Reset View",
+                social_link: "Social network",
+            },
+            es: {
+                subtitle: "Delineante · Diseñador 3D · Especialista BIM",
+                about_title: "Sobre mí",
+                about_text: "Soy delineante profesional especializado en dibujo CAD, modelado 3D, renderizado y animación. Domino herramientas como Rhino, Grasshopper, AutoCAD y BIM para materializar ideas de ingeniería y arquitectura con precisión y creatividad.",
+                what_title: "Qué encontrarás aquí",
+                what_text: "Esta página no está pensada como un portfolio profesional; por lo tanto, no encontrarás información detallada sobre los proyectos en los que he trabajado. En su lugar, funciona como un escaparate de las habilidades que he ido desarrollando.",
+                toc_title: "Índice de contenidos",
+                cad_link: "Planos CAD",
+                models_link: "Modelos 3D",
+                renders_link: "Renderizados",
+                animations_link: "Animaciones",
+                cad_title: "Planos CAD",
+                cad_text: "Ejemplos de planos técnicos en 2D realizados con AutoCAD y otras herramientas.",
+                models_title: "Modelos 3D",
+                models_text: "Modelo 3D interactivo. Puedes rotar, hacer zoom y explorar el modelo.",
+                renders_title: "Renderizados",
+                renders_text: "Renderizados fotorrealistas que muestran iluminación, materiales y composición.",
+                animations_title: "Animaciones",
+                animations_text: "Representaciones animadas de escenarios reales utilizando datos recogidos.",
+                example_animation: "Ejemplo de animación",
+                animation_description: "En este ejemplo se ha utilizado Grasshopper para generar un GIF del movimiento real de una noria. Con ello se pretende demostrar la utilidad de esta herramienta a la hora de expresar ideas de funcionamiento a terceros.",
+                reset_btn: "Reiniciar vista",
+                social_link: "Red social",
+            },
+            eu: {
+                subtitle: "Marrazkilari · 3D Diseinatzailea · BIM Espezialista",
+                about_title: "Niri buruz",
+                about_text: "Marrazkilari profesionala naiz, CAD marrazketan, 3D modelizazioan, renderizazioan eta animazioan aditua. Rhino, Grasshopper, AutoCAD eta BIM bezalako tresnak erabiltzen ditut ingeniaritza eta arkitektura kontzeptuak zehaztasunez eta sormenaz errealitate bihurtzeko.",
+                what_title: "Hemen zer aurkituko duzu",
+                what_text: "Orrialde hau ez da portfolio profesionala izateko pentsatuta; beraz, ez duzu aurkituko nire egindako proiektuen informazio zehatzik. Horren ordez, garatu ditudan gaitasun desberdinen erakustoki gisa balio du.",
+                toc_title: "Edukiaren aurkibidea",
+                cad_link: "CAD Marrazkiak",
+                models_link: "3D Ereduak",
+                renders_link: "Renderizazioak",
+                animations_link: "Animazioak",
+                cad_title: "CAD Marrazkiak",
+                cad_text: "AutoCAD eta bestelako marrazketa tresnekin egindako 2D marrazki teknikoen adibideak.",
+                models_title: "3D Ereduak",
+                models_text: "3D eredua interaktiboa. Biratu, zoom egin eta esploratu dezakezu behean.",
+                renders_title: "Renderizazioak",
+                renders_text: "Argiztapena, materialak eta konposizioa erakusten dituzten renderizazio fotorrealistak.",
+                animations_title: "Animazioak",
+                animations_text: "Datu errealekin egindako eszenatokien animazioak.",
+                example_animation: "Animazioaren adibidea",
+                animation_description: "En este ejemplo se ha utilizado Grasshopper para generar un GIF del movimiento real de una noria. Con ello se pretende demostrar la utilidad de esta herramienta a la hora de expresar ideas de funcionamiento a terceros.",
+                reset_btn: "Berrabiarazi ikuspegia",
+                social_link: "Sare soziala",
             }
-        }
+        };
 
-       // --- Carga del Modelo 3D (GLB) ---
-BABYLON.SceneLoader.Append("./", "modelo.glb", scene, function (loadedScene) {
-    try {
-        console.log("Modelo 'modelo.glb' cargado con éxito. Intentando configurar la escena...");
-
-        // **PASO 1: VERIFICACIÓN Y AJUSTE DE LA CÁMARA**
-        const worldExtends = scene.getWorldExtends(mesh => mesh.isVisible && mesh.isEnabled());
-        
-        // Comprobamos si el modelo tiene un tamaño calculable
-        if (isFinite(worldExtends.min.x) && isFinite(worldExtends.max.x)) {
-            console.log("Límites del modelo calculados. Ajustando cámara.");
-            camera.setTarget(worldExtends.center);
-            camera.radius = worldExtends.max.subtract(worldExtends.min).length() * 1.5;
-
-            // Guardamos este estado como el inicial para el botón de reset
-            initialCameraState = {
-                target: camera.target.clone(),
-                alpha: camera.alpha,
-                beta: camera.beta,
-                radius: camera.radius
-            };
-        } else {
-            console.warn("ADVERTENCIA: No se pudo calcular el tamaño del modelo. La cámara no se ajustará automáticamente. Es posible que el modelo esté vacío o sea inválido.");
-            // Dejamos la cámara en su posición por defecto
-        }
-
-        // **PASO 2: MATERIALES (Opcional)**
-        // Descomenta las siguientes líneas si quieres que el modelo sea blanco
-        /*
-        const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
-        whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
-        scene.meshes.forEach(mesh => {
-            if (mesh.id !== "__root__" && mesh.getTotalVertices() > 0) {
-                 mesh.material = whiteMaterial;
-            }
-        });
-        */
-
-        // **PASO 3: HOTSPOTS (Comentado por ahora para evitar errores)**
-        // setupHotspots(); 
-
-        // **PASO 4: INSPECTOR**
-        window.addEventListener("keydown", (ev) => {
-            if (ev.key === 'i') {
-                scene.debugLayer.isVisible() ? scene.debugLayer.hide() : scene.debugLayer.show({ embedMode: true });
-            }
-        });
-        console.log("Configuración de escena finalizada. Pulsa la tecla 'i' para abrir el Inspector.");
-
-    } catch (e) {
-        // Si algo falla dentro del bloque try, este bloque nos dirá exactamente qué fue.
-        console.error("ERROR CRÍTICO DENTRO DEL CÓDIGO 'onSuccess':", e);
-    }
-
-}, null, function (scene, message, exception) {
-    console.error("Error en la carga del archivo 'modelo.glb':", message, exception);
-    alert("No se pudo cargar el archivo 'modelo.glb'. Revisa la consola (F12) para más detalles.");
-});
-            };
-
-            // **CAMBIO DE EFICIENCIA: Crear un solo material y reutilizarlo**
-            const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
-            whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+        // Función para cambiar el idioma del contenido
+        function changeLanguage() {
+            const lang = document.getElementById('language').value;
+            document.querySelectorAll('[data-i18n]').forEach(el =>
             
-            // Opcional: Asignar el material blanco. Comenta este bloque si quieres usar los materiales originales.
-            scene.meshes.forEach(mesh => {
-                // Solo aplicar si es una malla visible y no una "caja contenedora" invisible
-                if (mesh.id !== "__root__" && mesh.getTotalVertices() > 0) {
-                     mesh.material = whiteMaterial;
-                }
-            });
-
-            // --- Lógica para Hotspots / Interacciones ---
-            //setupHotspots();
-
-            // **CAMBIO DE DEPURACIÓN: Activar el Inspector de Babylon.js**
-            // Tecla `i` para mostrar/ocultar. Te permitirá ver todas las mallas y sus nombres.
-            window.addEventListener("keydown", (ev) => {
-                if (ev.key === 'i') {
-                    if (scene.debugLayer.isVisible()) {
-                        scene.debugLayer.hide();
-                    } else {
-                        scene.debugLayer.show({ embedMode: true });
-                    }
-                }
-            });
-            console.log("Pulsa la tecla 'i' para abrir el Inspector y encontrar los nombres de tus mallas.");
-
-        }, null, function (scene, message, exception) {
-            console.error("Error al cargar el modelo 'modelo.glb':", message, exception);
-            alert("No se pudo cargar el modelo 'modelo.glb'.\nRevisa la consola del navegador (F12) para ver los detalles del error.\nAsegúrate de que el archivo está en la misma carpeta que el HTML.");
-        });
-
-        function setupHotspots() {
-            // Elementos del panel de información
-            const infoPanel = document.getElementById("infoPanel");
-            const panelTitle = document.getElementById("panelTitle");
-            const panelContent = document.getElementById("panelContent");
-            const closeInfoButton = document.getElementById("closeInfo");
-            
-            if (closeInfoButton) {
-                closeInfoButton.onclick = () => infoPanel.style.display = "none";
-            }
-
-            function showInfoPanel(title, content) {
-                panelTitle.innerText = title;
-                panelContent.innerText = content;
-                infoPanel.style.display = "block";
-            }
-
-            // Crear materiales de resaltado
-            const highlightMaterialA = new BABYLON.StandardMaterial("highlightMatA", scene);
-            highlightMaterialA.diffuseColor = new BABYLON.Color3(0, 1, 0); // Verde
-            highlightMaterialA.emissiveColor = new BABYLON.Color3(0.2, 0.4, 0.2); // Un ligero brillo propio
-
-            const highlightMaterialB = new BABYLON.StandardMaterial("highlightMatB", scene);
-            highlightMaterialB.diffuseColor = new BABYLON.Color3(1, 0.5, 0); // Naranja
-            highlightMaterialB.emissiveColor = new BABYLON.Color3(0.4, 0.2, 0);
-
-            // --- Configuración de acciones ---
-            scene.actionManager = new BABYLON.ActionManager(scene);
-
-            // ¡IMPORTANTE! Cambia estos nombres por los nombres reales de tus mallas
-            const meshNames = {
-                hotspotA: "nombre_de_tu_malla_1", // Por ejemplo, "BaseTurbine"
-                hotspotB: "nombre_de_tu_malla_2"  // Por ejemplo, "Blade_R"
-            };
-
-            const meshA = scene.getMeshByName(meshNames.hotspotA);
-            const meshB = scene.getMeshByName(meshNames.hotspotB);
-            
-            // Función auxiliar para registrar las 3 acciones (clic, hover, out)
-            const registerHotspotActions = (mesh, highlightMaterial, title, content) => {
-                if (!mesh) {
-                    console.warn(`Hotspot '${mesh.name}' no encontrado. Revisa el nombre en el GLB.`);
-                    return;
-                }
-                
-                let originalMaterial = mesh.material;
-
-                // Acción al hacer clic
-                mesh.actionManager = new BABYLON.ActionManager(scene);
-                mesh.actionManager.registerAction(
-                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
-                        showInfoPanel(title, content);
-                    })
-                );
-
-                // Acción al pasar el ratón por encima
-                mesh.actionManager.registerAction(
-                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPointerOverTrigger, () => {
-                        mesh.material = highlightMaterial;
-                        canvas.style.cursor = "pointer";
-                    })
-                );
-                
-                // Acción al quitar el ratón
-                mesh.actionManager.registerAction(
-                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPointerOutTrigger, () => {
-                        mesh.material = originalMaterial;
-                        canvas.style.cursor = "default";
-                    })
-                );
-            };
-
-            // Registrar acciones para cada hotspot
-            registerHotspotActions(meshA, highlightMaterialA, "Sección Principal del SATH", "Esta es la sección de control principal del SATH. Monitoriza los sistemas críticos y la generación de energía.");
-            registerHotspotActions(meshB, highlightMaterialB, "Palas de Turbina", "Las palas están diseñadas para capturar la energía del viento de manera eficiente y convertirla en rotación.");
-        }
-
-        // --- Bucle de renderizado y redimensionamiento ---
-        engine.runRenderLoop(() => scene.render());
-        window.addEventListener("resize", () => engine.resize());
-
-    </script>
-</body>
-</html>
