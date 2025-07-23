@@ -82,6 +82,8 @@
     camera.wheelPrecision = 0.5;
     camera.angularSensibilityX = 500;
     camera.angularSensibilityY = 500;
+    camera.lowerBetaLimit = camera.beta;
+    camera.upperBetaLimit = camera.beta;
 
     const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0,1,0), scene);
     hemiLight.intensity = 0.9;
