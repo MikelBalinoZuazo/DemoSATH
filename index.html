@@ -81,16 +81,18 @@
             }
         }
 
-        // --- Carga del Modelo 3D (GLB) ---
-        BABYLON.SceneLoader.Append("./", "modelo.glb", scene, function (loadedScene) {
-            console.log("Modelo 'modelo.glb' cargado con éxito.");
+       // --- Carga del Modelo 3D (GLB) ---
+BABYLON.SceneLoader.Append("./", "modelo.glb", scene, function (loadedScene) {
+    try {
+        console.log("Modelo 'modelo.glb' cargado con éxito. Intentando configurar la escena...");
 
-            // **CAMBIO CLAVE: Ajuste manual y fiable de la cámara**
-            // 1. Obtener los límites de todas las mallas cargadas
-            const worldExtends = loadedScene.getWorldExtends();
-            // 2. Apuntar la cámara al centro del modelo
+        // **PASO 1: VERIFICACIÓN Y AJUSTE DE LA CÁMARA**
+        const worldExtends = scene.getWorldExtends(mesh => mesh.isVisible && mesh.isEnabled());
+        
+        // Comprobamos si el modelo tiene un tamaño calculable
+        if (isFinite(worldExtends.min.x) && isFinite(worldExtends.max.x)) {
+            console.log("Límites del modelo calculados. Ajustando cámara.");
             camera.setTarget(worldExtends.center);
-            // 3. Ajustar el zoom para que el modelo entero quepa en la vista
             camera.radius = worldExtends.max.subtract(worldExtends.min).length() * 1.5;
 
             // Guardamos este estado como el inicial para el botón de reset
@@ -99,6 +101,44 @@
                 alpha: camera.alpha,
                 beta: camera.beta,
                 radius: camera.radius
+            };
+        } else {
+            console.warn("ADVERTENCIA: No se pudo calcular el tamaño del modelo. La cámara no se ajustará automáticamente. Es posible que el modelo esté vacío o sea inválido.");
+            // Dejamos la cámara en su posición por defecto
+        }
+
+        // **PASO 2: MATERIALES (Opcional)**
+        // Descomenta las siguientes líneas si quieres que el modelo sea blanco
+        /*
+        const whiteMaterial = new BABYLON.StandardMaterial("whiteMat", scene);
+        whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+        scene.meshes.forEach(mesh => {
+            if (mesh.id !== "__root__" && mesh.getTotalVertices() > 0) {
+                 mesh.material = whiteMaterial;
+            }
+        });
+        */
+
+        // **PASO 3: HOTSPOTS (Comentado por ahora para evitar errores)**
+        // setupHotspots(); 
+
+        // **PASO 4: INSPECTOR**
+        window.addEventListener("keydown", (ev) => {
+            if (ev.key === 'i') {
+                scene.debugLayer.isVisible() ? scene.debugLayer.hide() : scene.debugLayer.show({ embedMode: true });
+            }
+        });
+        console.log("Configuración de escena finalizada. Pulsa la tecla 'i' para abrir el Inspector.");
+
+    } catch (e) {
+        // Si algo falla dentro del bloque try, este bloque nos dirá exactamente qué fue.
+        console.error("ERROR CRÍTICO DENTRO DEL CÓDIGO 'onSuccess':", e);
+    }
+
+}, null, function (scene, message, exception) {
+    console.error("Error en la carga del archivo 'modelo.glb':", message, exception);
+    alert("No se pudo cargar el archivo 'modelo.glb'. Revisa la consola (F12) para más detalles.");
+});
             };
 
             // **CAMBIO DE EFICIENCIA: Crear un solo material y reutilizarlo**
