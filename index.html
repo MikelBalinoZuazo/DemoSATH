@@ -91,6 +91,14 @@
 
     BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
       console.log("Modelo cargado con materiales originales.");
+
+      const meshes = scene.meshes;
+if (meshes.length > 0) {
+  const boundingInfo = meshes[0].getHierarchyBoundingVectors();
+  const center = boundingInfo.min.add(boundingInfo.max).scale(0.5);
+  camera.setTarget(center);
+  camera.radius = BABYLON.Vector3.Distance(boundingInfo.min, boundingInfo.max) * 1.5;
+      
     }, null, (scene, message, exception) => {
       console.error("Error cargando modelo:", message, exception);
     });
