@@ -3,44 +3,45 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Visualizador 3D Mejorado</title>
+<title>DemoSATH Mejorado</title>
 <style>
   html, body {
-    margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
-    background: linear-gradient(135deg, #e6e9f0, #eef1f5);
-    font-family: 'Inter', sans-serif;
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+    font-family: Arial, sans-serif;
   }
   #renderCanvas {
     width: 100%;
     height: 100%;
     display: block;
     touch-action: none;
+    cursor: grab;
   }
-  /* Botón flotante */
-  #toggleRotateBtn {
-    position: absolute;
+  #toggleRotationBtn {
+    position: fixed;
     top: 20px;
     right: 20px;
-    background: #1976d2;
-    border: none;
-    color: white;
-    padding: 10px 18px;
+    background: rgba(255 255 255 / 0.8);
+    border: 2px solid #888;
+    border-radius: 25px;
+    padding: 10px 20px;
     font-size: 14px;
-    border-radius: 6px;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgb(25 118 210 / 0.4);
-    transition: background-color 0.3s ease;
     user-select: none;
+    transition: background 0.3s, border-color 0.3s;
+    z-index: 10;
   }
-  #toggleRotateBtn:hover {
-    background: #145a9c;
+  #toggleRotationBtn:hover {
+    background: rgba(255 255 255 / 1);
+    border-color: #555;
   }
 </style>
 </head>
 <body>
 
 <canvas id="renderCanvas"></canvas>
-<button id="toggleRotateBtn">Stop Rotation</button>
+<button id="toggleRotationBtn">Stop Rotation</button>
 
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
@@ -49,64 +50,65 @@
   const engine = new BABYLON.Engine(canvas, true);
   const scene = new BABYLON.Scene(engine);
 
-  // Cámara arc rotate
+  // Cámara ArcRotateCamera centrada en (0,0,0)
   const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
   camera.attachControl(canvas, true);
-  camera.upperRadiusLimit = 5000;
-  camera.lowerRadiusLimit = 0.1;
+  camera.upperRadiusLimit = 50;
+  camera.lowerRadiusLimit = 2;
   camera.wheelPrecision = 0.5;
 
   // Luces
-  const light1 = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-  light1.intensity = 0.8;
+  const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+  hemiLight.intensity = 0.7;
 
-  const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, 1), scene);
-  dirLight.intensity = 0.3;
+  const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
+  dirLight.intensity = 0.4;
 
-  // Variables para rotación automática
+  // Variables para controlar rotación automática
   let autoRotate = true;
-  const rotationSpeed = 0.002;
+  const rotationSpeed = 0.005;
 
-  // Evitar scroll al usar la rueda sobre el canvas
-  canvas.addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
-
-  // Botón para controlar rotación automática
-  const btn = document.getElementById("toggleRotateBtn");
-  btn.addEventListener("click", () => {
+  // Botón para pausar/activar rotación
+  const toggleBtn = document.getElementById("toggleRotationBtn");
+  toggleBtn.onclick = () => {
     autoRotate = !autoRotate;
-    btn.textContent = autoRotate ? "Stop Rotation" : "Start Rotation";
-  });
+    toggleBtn.textContent = autoRotate ? "Stop Rotation" : "Start Rotation";
+  };
 
   // Cargar modelo GLB
-  BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
-    console.log("¡Modelo cargado!");
+  BABYLON.SceneLoader.Append("./", "modelo.glb", scene, (scene) => {
+    console.log("Modelo cargado correctamente");
 
-    // Crear material blanco mate y aplicarlo
-    const whiteMat = new BABYLON.StandardMaterial("whiteMat", scene);
-    whiteMat.diffuseColor = new BABYLON.Color3(1,1,1);
-    whiteMat.specularColor = new BABYLON.Color3(0,0,0); // mate: sin brillo especular
+    // Material PBR blanco mate para todo el modelo
+    const whitePBR = new BABYLON.PBRMaterial("whitePBR", scene);
+    whitePBR.albedoColor = new BABYLON.Color3(1,1,1);
+    whitePBR.metallic = 0;
+    whitePBR.roughness = 1;
 
     scene.meshes.forEach(mesh => {
-      if(mesh.material && mesh.name !== "ground") {
-        mesh.material = whiteMat;
+      if (mesh.material) {
+        mesh.material = whitePBR;
       }
     });
 
     // Ajustar cámara para que encuadre el modelo
     scene.createDefaultCameraOrLight(true, true, true);
     scene.activeCamera = camera;
+  }, null, (scene, message, exception) => {
+    console.error("Error cargando modelo:", message, exception);
   });
 
   // Render loop
   engine.runRenderLoop(() => {
-    if(autoRotate) {
-      // Rotar la cámara alrededor del objetivo (Vector3.Zero())
+    if (autoRotate) {
       camera.alpha += rotationSpeed;
     }
     scene.render();
   });
 
-  window.addEventListener("resize", () => engine.resize());
+  window.addEventListener("resize", () => {
+    engine.resize();
+  });
 </script>
 
 </body>
