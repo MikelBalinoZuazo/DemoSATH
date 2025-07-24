@@ -145,34 +145,8 @@ if (bladeMeshes.length > 0) {
     BABYLON.Animation.CreateAndStartAnimation("camTargetZ", camera.target, "z", 60, 30, camera.target.z, bladeCenter.z, 0);
   };
 }
-
-  // Calcular el bounding box combinado
-  let min = bladeMeshes[0].getBoundingInfo().boundingBox.minimumWorld;
-  let max = bladeMeshes[0].getBoundingInfo().boundingBox.maximumWorld;
-
-  for (let i = 1; i < bladeMeshes.length; i++) {
-    const bbox = bladeMeshes[i].getBoundingInfo().boundingBox;
-    min = BABYLON.Vector3.Minimize(min, bbox.minimumWorld);
-    max = BABYLON.Vector3.Maximize(max, bbox.maximumWorld);
-  }
-
-  const center = min.add(max).scale(0.5);
-  const radius = BABYLON.Vector3.Distance(min, max) * 1.2;
-
-  // Animar el zoom y enfoque
-  BABYLON.Animation.CreateAndStartAnimation("camRadius", camera, "radius", 60, 30, camera.radius, radius, 0);
-  BABYLON.Animation.CreateAndStartAnimation("camTargetX", camera.target, "x", 60, 30, camera.target.x, center.x, 0);
-  BABYLON.Animation.CreateAndStartAnimation("camTargetY", camera.target, "y", 60, 30, camera.target.y, center.y, 0);
-  BABYLON.Animation.CreateAndStartAnimation("camTargetZ", camera.target, "z", 60, 30, camera.target.z, center.z, 0);
 });
       
-      const meshes = scene.meshes;
-if (meshes.length > 0) {
-  const boundingInfo = meshes[0].getHierarchyBoundingVectors();
-  const center = boundingInfo.min.add(boundingInfo.max).scale(0.5);
-  camera.setTarget(center);
-  camera.radius = BABYLON.Vector3.Distance(boundingInfo.min, boundingInfo.max) * 1.5;
-      }
     }, null, (scene, message, exception) => {
       console.error("Error cargando modelo:", message, exception);
     });
