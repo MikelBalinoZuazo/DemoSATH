@@ -66,6 +66,19 @@
     <canvas id="renderCanvas"></canvas>
   </div>
 
+  <div id="bladeLabel" style="
+  position: absolute;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  pointer-events: auto;
+  font-weight: bold;
+  display: none;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+">Wind turbine blades</div>
+  
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
   <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 
@@ -95,17 +108,44 @@
     BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
       console.log("Modelo cargado con materiales originales.");
 
-      // Crear botón de etiqueta
-const labelButton = document.createElement("button");
-labelButton.textContent = "Wind turbine blades";
-labelButton.style.marginTop = "20px";
-labelButton.style.padding = "10px";
-labelButton.style.cursor = "pointer";
-labelButton.style.border = "1px solid #ccc";
-labelButton.style.borderRadius = "5px";
-labelButton.style.background = "#f0f0f0";
-labelButton.style.fontWeight = "bold";
-document.querySelector(".sidebar").appendChild(labelButton);
+// ETIQUETA VISUAL QUE APUNTA A LAS ASPAS
+const bladeLabel = document.getElementById("bladeLabel");
+
+const bladeMeshes = scene.meshes.filter(mesh => /^ASPAS_primitive\d+$/.test(mesh.name));
+if (bladeMeshes.length > 0) {
+  // Calcular centro
+  let min = bladeMeshes[0].getBoundingInfo().boundingBox.minimumWorld;
+  let max = bladeMeshes[0].getBoundingInfo().boundingBox.maximumWorld;
+  for (let i = 1; i < bladeMeshes.length; i++) {
+    const bbox = bladeMeshes[i].getBoundingInfo().boundingBox;
+    min = BABYLON.Vector3.Minimize(min, bbox.minimumWorld);
+    max = BABYLON.Vector3.Maximize(max, bbox.maximumWorld);
+  }
+  const bladeCenter = min.add(max).scale(0.5);
+
+  // Mostrar y posicionar la etiqueta
+  bladeLabel.style.display = "block";
+  scene.onBeforeRenderObservable.add(() => {
+    const pos = BABYLON.Vector3.Project(
+      bladeCenter,
+      BABYLON.Matrix.Identity(),
+      scene.getTransformMatrix(),
+      camera.viewport.toGlobal(canvas.width, canvas.height)
+    );
+    bladeLabel.style.left = `${pos.x}px`;
+    bladeLabel.style.top = `${pos.y}px`;
+  });
+
+  // Zoom al hacer clic en la etiqueta
+  bladeLabel.onclick = () => {
+    const radius = BABYLON.Vector3.Distance(min, max) * 1.2;
+    BABYLON.Animation.CreateAndStartAnimation("camRadius", camera, "radius", 60, 30, camera.radius, radius, 0);
+    BABYLON.Animation.CreateAndStartAnimation("camTargetX", camera.target, "x", 60, 30, camera.target.x, bladeCenter.x, 0);
+    BABYLON.Animation.CreateAndStartAnimation("camTargetY", camera.target, "y", 60, 30, camera.target.y, bladeCenter.y, 0);
+    BABYLON.Animation.CreateAndStartAnimation("camTargetZ", camera.target, "z", 60, 30, camera.target.z, bladeCenter.z, 0);
+  };
+}
+
 
 // Función de zoom al hacer clic
 labelButton.addEventListener("click", () => {
