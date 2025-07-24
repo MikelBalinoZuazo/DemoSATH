@@ -104,9 +104,12 @@
     dirLight.intensity = 0.6;
 
     canvas.addEventListener("wheel", e => e.preventDefault(), { passive: false });
-
+    
+//CARGAR EL MODELO
     BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
       console.log("Modelo cargado con materiales originales.");
+      scene.meshes.forEach(mesh => console.log(mesh.name));
+
 
 // ETIQUETA VISUAL QUE APUNTA A LAS ASPAS
 const bladeLabel = document.getElementById("bladeLabel");
