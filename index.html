@@ -57,7 +57,7 @@
     <img src="Saitec_Offshore.png" alt="Imagen descriptiva" />
     <div>
       <h1>DemoSATH</h1>
-      <p>DemoSATH is an innovative floating wind energy project featuring SATH technology.<br> <br>SATH stands for Swinging around twin hull, which is a patented design for a concrete-based floating wind turbine platform. <br> <br>
+      <p>DemoSATH is an innovative floating wind energy project featuring SATH technology.<br> <br>SATH stands for swinging around twin hull, which is a patented design for a concrete-based floating wind turbine platform. <br> <br>
       The innovative design of DemoSATH, which includes a tween hull structure, damping plate, and a rotating mooring system, has been key to enhancing stability and minimizing wave impact. The floater’s ability to mitigate pitch and roll movements ensures stable energy production even in harsh conditions. This design efficiency allowed the turbine to operate at its full 2 MW capacity for continuous 24-hour periods, proving its ability to harness wind power in medium to severe environments.</p>
     </div>
   </div>
@@ -95,6 +95,49 @@
     BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
       console.log("Modelo cargado con materiales originales.");
 
+      // Crear botón de etiqueta
+const labelButton = document.createElement("button");
+labelButton.textContent = "Wind turbine blades";
+labelButton.style.marginTop = "20px";
+labelButton.style.padding = "10px";
+labelButton.style.cursor = "pointer";
+labelButton.style.border = "1px solid #ccc";
+labelButton.style.borderRadius = "5px";
+labelButton.style.background = "#f0f0f0";
+labelButton.style.fontWeight = "bold";
+document.querySelector(".sidebar").appendChild(labelButton);
+
+// Función de zoom al hacer clic
+labelButton.addEventListener("click", () => {
+  const bladeMeshes = scene.meshes.filter(mesh => 
+    /^ASPAS_primitive\d+$/.test(mesh.name)
+  );
+
+  if (bladeMeshes.length === 0) {
+    console.warn("No se encontraron aspas.");
+    return;
+  }
+
+  // Calcular el bounding box combinado
+  let min = bladeMeshes[0].getBoundingInfo().boundingBox.minimumWorld;
+  let max = bladeMeshes[0].getBoundingInfo().boundingBox.maximumWorld;
+
+  for (let i = 1; i < bladeMeshes.length; i++) {
+    const bbox = bladeMeshes[i].getBoundingInfo().boundingBox;
+    min = BABYLON.Vector3.Minimize(min, bbox.minimumWorld);
+    max = BABYLON.Vector3.Maximize(max, bbox.maximumWorld);
+  }
+
+  const center = min.add(max).scale(0.5);
+  const radius = BABYLON.Vector3.Distance(min, max) * 1.2;
+
+  // Animar el zoom y enfoque
+  BABYLON.Animation.CreateAndStartAnimation("camRadius", camera, "radius", 60, 30, camera.radius, radius, 0);
+  BABYLON.Animation.CreateAndStartAnimation("camTargetX", camera.target, "x", 60, 30, camera.target.x, center.x, 0);
+  BABYLON.Animation.CreateAndStartAnimation("camTargetY", camera.target, "y", 60, 30, camera.target.y, center.y, 0);
+  BABYLON.Animation.CreateAndStartAnimation("camTargetZ", camera.target, "z", 60, 30, camera.target.z, center.z, 0);
+});
+      
       const meshes = scene.meshes;
 if (meshes.length > 0) {
   const boundingInfo = meshes[0].getHierarchyBoundingVectors();
