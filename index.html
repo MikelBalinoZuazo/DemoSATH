@@ -62,22 +62,22 @@
     </div>
   </div>
 
-  <div class="content">
-    <canvas id="renderCanvas"></canvas>
-  </div>
-
+<div class="content" style="position: relative;">
+  <canvas id="renderCanvas"></canvas>
   <div id="bladeLabel" style="
-  position: absolute;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  pointer-events: auto;
-  font-weight: bold;
-  display: none;
-  transform: translate(-50%, -50%);
-  cursor: pointer;
-">Wind turbine blades</div>
+    position: absolute;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    pointer-events: auto;
+    font-weight: bold;
+    display: none;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+  ">Wind turbine blades</div>
+</div>
+
   
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
   <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
@@ -130,7 +130,7 @@ if (bladeMeshes.length > 0) {
       bladeCenter,
       BABYLON.Matrix.Identity(),
       scene.getTransformMatrix(),
-      camera.viewport.toGlobal(canvas.width, canvas.height)
+      new BABYLON.Viewport(0, 0, canvas.width, canvas.height)
     );
     bladeLabel.style.left = `${pos.x}px`;
     bladeLabel.style.top = `${pos.y}px`;
@@ -145,18 +145,6 @@ if (bladeMeshes.length > 0) {
     BABYLON.Animation.CreateAndStartAnimation("camTargetZ", camera.target, "z", 60, 30, camera.target.z, bladeCenter.z, 0);
   };
 }
-
-
-// Función de zoom al hacer clic
-labelButton.addEventListener("click", () => {
-  const bladeMeshes = scene.meshes.filter(mesh => 
-    /^ASPAS_primitive\d+$/.test(mesh.name)
-  );
-
-  if (bladeMeshes.length === 0) {
-    console.warn("No se encontraron aspas.");
-    return;
-  }
 
   // Calcular el bounding box combinado
   let min = bladeMeshes[0].getBoundingInfo().boundingBox.minimumWorld;
