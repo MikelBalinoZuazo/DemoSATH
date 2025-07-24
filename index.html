@@ -49,6 +49,20 @@
       display: block;
       touch-action: none;
     }
+
+    #bladeLabel {
+      position: absolute;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      pointer-events: auto;
+      font-weight: bold;
+      display: none;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -57,28 +71,19 @@
     <img src="Saitec_Offshore.png" alt="Imagen descriptiva" />
     <div>
       <h1>DemoSATH</h1>
-      <p>DemoSATH is an innovative floating wind energy project featuring SATH technology.<br> <br>SATH stands for swinging around twin hull, which is a patented design for a concrete-based floating wind turbine platform. <br> <br>
-      The innovative design of DemoSATH, which includes a tween hull structure, damping plate, and a rotating mooring system, has been key to enhancing stability and minimizing wave impact. The floater’s ability to mitigate pitch and roll movements ensures stable energy production even in harsh conditions. This design efficiency allowed the turbine to operate at its full 2 MW capacity for continuous 24-hour periods, proving its ability to harness wind power in medium to severe environments.</p>
+      <p>
+        DemoSATH is an innovative floating wind energy project featuring SATH technology.<br><br>
+        SATH stands for swinging around twin hull, which is a patented design for a concrete-based floating wind turbine platform.<br><br>
+        The innovative design of DemoSATH, which includes a twin hull structure, damping plate, and a rotating mooring system, has been key to enhancing stability and minimizing wave impact. The floater’s ability to mitigate pitch and roll movements ensures stable energy production even in harsh conditions. This design efficiency allowed the turbine to operate at its full 2 MW capacity for continuous 24-hour periods, proving its ability to harness wind power in medium to severe environments.
+      </p>
     </div>
   </div>
 
-<div class="content" style="position: relative;">
-  <canvas id="renderCanvas"></canvas>
-  <div id="bladeLabel" style="
-    position: absolute;
-    padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    pointer-events: auto;
-    font-weight: bold;
-    display: none;
-    transform: translate(-50%, -50%);
-    cursor: pointer;
-  ">Wind turbine blades</div>
-</div>
+  <div class="content" style="position: relative;">
+    <canvas id="renderCanvas"></canvas>
+    <div id="bladeLabel">Wind turbine blades</div>
+  </div>
 
-  
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
   <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 
@@ -88,7 +93,7 @@
     const scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0.9, 0.9, 0.9, 1); // Gris claro
 
-    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI/2, Math.PI/3, 10, BABYLON.Vector3.Zero(), scene);
+    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 10, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
     camera.lowerRadiusLimit = 0.1;
     camera.upperRadiusLimit = 1000;
@@ -98,66 +103,72 @@
     camera.lowerBetaLimit = camera.beta;
     camera.upperBetaLimit = camera.beta;
 
-    const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0,1,0), scene);
+    const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
     hemiLight.intensity = 0.9;
     const dirLight = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-1, -2, -1), scene);
     dirLight.intensity = 0.6;
 
     canvas.addEventListener("wheel", e => e.preventDefault(), { passive: false });
-    
-//CARGAR EL MODELO
+
+    // Cargar el modelo
     BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
       console.log("Modelo cargado con materiales originales.");
       scene.meshes.forEach(mesh => console.log(mesh.name));
 
+      const bladeLabel = document.getElementById("bladeLabel");
 
-// ETIQUETA VISUAL QUE APUNTA A LAS ASPAS
-const bladeLabel = document.getElementById("bladeLabel");
+      // Filtrar mallas que coincidan con el patrón ASPAS_primitiveN
+      const bladeMeshes = scene.meshes.filter(mesh => /^ASPAS_primitive\d+$/.test(mesh.name));
+      if (bladeMeshes.length > 0) {
+        // Calcular el centro del bounding box combinado de las aspas
+        let min = bladeMeshes[0].getBoundingInfo().boundingBox.minimumWorld.clone();
+        let max = bladeMeshes[0].getBoundingInfo().boundingBox.maximumWorld.clone();
+        for (let i = 1; i < bladeMeshes.length; i++) {
+          const bbox = bladeMeshes[i].getBoundingInfo().boundingBox;
+          min = BABYLON.Vector3.Minimize(min, bbox.minimumWorld);
+          max = BABYLON.Vector3.Maximize(max, bbox.maximumWorld);
+        }
+        const bladeCenter = min.add(max).scale(0.5);
 
-const bladeMeshes = scene.meshes.filter(mesh => /^ASPAS_primitive\d+$/.test(mesh.name));
-if (bladeMeshes.length > 0) {
-  // Calcular centro
-  let min = bladeMeshes[0].getBoundingInfo().boundingBox.minimumWorld;
-  let max = bladeMeshes[0].getBoundingInfo().boundingBox.maximumWorld;
-  for (let i = 1; i < bladeMeshes.length; i++) {
-    const bbox = bladeMeshes[i].getBoundingInfo().boundingBox;
-    min = BABYLON.Vector3.Minimize(min, bbox.minimumWorld);
-    max = BABYLON.Vector3.Maximize(max, bbox.maximumWorld);
-  }
-  const bladeCenter = min.add(max).scale(0.5);
+        bladeLabel.style.display = "block";
 
-  // Mostrar y posicionar la etiqueta
-  bladeLabel.style.display = "block";
-  scene.onBeforeRenderObservable.add(() => {
-    const pos = BABYLON.Vector3.Project(
-      bladeCenter,
-      BABYLON.Matrix.Identity(),
-      scene.getTransformMatrix(),
-      new BABYLON.Viewport(0, 0, canvas.width, canvas.height)
-    );
-    bladeLabel.style.left = `${pos.x}px`;
-    bladeLabel.style.top = `${pos.y}px`;
-  });
+        scene.onBeforeRenderObservable.add(() => {
+          const pos = BABYLON.Vector3.Project(
+            bladeCenter,
+            BABYLON.Matrix.Identity(),
+            scene.getTransformMatrix(),
+            new BABYLON.Viewport(0, 0, canvas.width, canvas.height)
+          );
 
-  // Zoom al hacer clic en la etiqueta
-  bladeLabel.onclick = () => {
-    const radius = BABYLON.Vector3.Distance(min, max) * 1.2;
-    BABYLON.Animation.CreateAndStartAnimation("camRadius", camera, "radius", 60, 30, camera.radius, radius, 0);
-    BABYLON.Animation.CreateAndStartAnimation("camTargetX", camera.target, "x", 60, 30, camera.target.x, bladeCenter.x, 0);
-    BABYLON.Animation.CreateAndStartAnimation("camTargetY", camera.target, "y", 60, 30, camera.target.y, bladeCenter.y, 0);
-    BABYLON.Animation.CreateAndStartAnimation("camTargetZ", camera.target, "z", 60, 30, camera.target.z, bladeCenter.z, 0);
-  };
-}
-});
-      
-    }, null, (scene, message, exception) => {
+          // Mostrar etiqueta solo si el punto está frente a la cámara
+          if (pos.z > 0) {
+            bladeLabel.style.left = `${pos.x}px`;
+            bladeLabel.style.top = `${pos.y}px`;
+            bladeLabel.style.display = "block";
+          } else {
+            bladeLabel.style.display = "none";
+          }
+        });
+
+        bladeLabel.onclick = () => {
+          const radius = BABYLON.Vector3.Distance(min, max) * 1.2;
+          BABYLON.Animation.CreateAndStartAnimation("camRadius", camera, "radius", 60, 30, camera.radius, radius, 0);
+          BABYLON.Animation.CreateAndStartAnimation("camTargetX", camera.target, "x", 60, 30, camera.target.x, bladeCenter.x, 0);
+          BABYLON.Animation.CreateAndStartAnimation("camTargetY", camera.target, "y", 60, 30, camera.target.y, bladeCenter.y, 0);
+          BABYLON.Animation.CreateAndStartAnimation("camTargetZ", camera.target, "z", 60, 30, camera.target.z, bladeCenter.z, 0);
+        };
+      }
+    },
+    null,
+    (scene, message, exception) => {
       console.error("Error cargando modelo:", message, exception);
     });
 
     engine.runRenderLoop(() => scene.render());
     window.addEventListener("resize", () => engine.resize());
-      //AÑADIDO EL INSPECTOR. PARA ABRIR TELCA I
-       window.addEventListener("keydown", (e) => {
+
+    // Añadido el inspector: tecla I para abrir/cerrar
+    window.addEventListener("keydown", (e) => {
       if (e.key === "i" || e.key === "I") {
         if (scene.debugLayer.isVisible()) {
           scene.debugLayer.hide();
@@ -168,6 +179,5 @@ if (bladeMeshes.length > 0) {
     });
   </script>
 
-  
 </body>
 </html>
