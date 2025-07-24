@@ -109,10 +109,14 @@ if (meshes.length > 0) {
     engine.runRenderLoop(() => scene.render());
     window.addEventListener("resize", () => engine.resize());
     window.addEventListener("keydown", (e) => {
-  if (e.key === "i") {
-    scene.debugLayer.isVisible() ? scene.debugLayer.hide() : scene.debugLayer.show();
-  }
+      //AÑADIDO EL INSPECTOR. PARA ABRIR TELCA I
+        window.addEventListener("keydown", (e) => {
+      if (e.key === "i") {
+        scene.debugLayer.isVisible() ? scene.debugLayer.hide() : scene.debugLayer.show();
+      }
+    });
   </script>
 
+  
 </body>
 </html>
