@@ -120,7 +120,12 @@ if (torreMesh) {
 
   torreLabel.linkWithMesh(torreMesh); // Enlaza el texto con la torre
   torreLabel.linkOffsetY = -200; // Eleva el texto visualmente sobre la torre
-
+  
+// Aquí añadimos el evento para navegar a torre.html
+  torreLabel.onPointerDownObservable.add(() => {
+    window.location.href = "torre.html";
+  });
+  
   const torreLine = new BABYLON.GUI.Line();
 torreLine.lineWidth = 2;
 torreLine.color = "black";
