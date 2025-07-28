@@ -129,7 +129,8 @@ advancedTexture.addControl(torreLine);
 
 // Enlazar ambos extremos de la línea
 torreLine.linkWithMesh(torreMesh); // Un extremo a la torre
-torreLine.connectedControl = torreLabel; // El otro al texto
+torreLine.connectedControl = torreLabel; // Extremo UI
+torreLine.connectionPoint = new BABYLON.Vector2(0, 1); // conecta abajo del texto
 
 } else {
   console.warn("No se encontró una malla con 'torre' en el nombre.");
