@@ -120,6 +120,17 @@ if (torreMesh) {
 
   torreLabel.linkWithMesh(torreMesh); // Enlaza el texto con la torre
   torreLabel.linkOffsetY = -200; // Eleva el texto visualmente sobre la torre
+
+  const torreLine = new BABYLON.GUI.Line();
+torreLine.lineWidth = 2;
+torreLine.color = "black";
+torreLine.alpha = 0.8;
+advancedTexture.addControl(torreLine);
+
+// Enlazar ambos extremos de la línea
+torreLine.linkWithMesh(torreMesh); // Un extremo a la torre
+torreLine.connectedControl = torreLabel; // El otro al texto
+
 } else {
   console.warn("No se encontró una malla con 'torre' en el nombre.");
 }
