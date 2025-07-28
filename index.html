@@ -94,47 +94,69 @@
     canvas.addEventListener("wheel", e => e.preventDefault(), { passive: false });
 
     BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
-      console.log("Modelo cargado con materiales originales.");
-      // Crear GUI avanzada
-const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+  console.log("Modelo cargado con materiales originales.");
 
-// Suponiendo que la torre es el primer mesh del modelo (ajusta si es otro)
-const torreMesh = scene.meshes.find(m => m.name.toLowerCase().includes("torre") || m.name.toLowerCase().includes("tower"));
+  // GUI avanzada
+  const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-if (torreMesh) {
-  const torreLabel = new BABYLON.GUI.Rectangle("torreLabel");
-  torreLabel.background = "#ffffffcc";
-  torreLabel.height = "30px";
-  torreLabel.alpha = 0.8;
-  torreLabel.width = "100px";
-  torreLabel.cornerRadius = 5;
-  torreLabel.thickness = 1;
-  torreLabel.color = "black";
-  advancedTexture.addControl(torreLabel);
+  // Buscar la torre por nombre
+  const torreMesh = scene.meshes.find(m => m.name.toLowerCase().includes("torre") || m.name.toLowerCase().includes("tower"));
 
-  const torreText = new BABYLON.GUI.TextBlock();
-  torreText.text = "Torre";
-  torreText.color = "black";
-  torreText.fontSize = 14;
-  torreLabel.addControl(torreText);
+  if (torreMesh) {
+    // Crear etiqueta rectangular
+    const torreLabel = new BABYLON.GUI.Rectangle("torreLabel");
+    torreLabel.background = "#ffffffcc";
+    torreLabel.height = "30px";
+    torreLabel.width = "100px";
+    torreLabel.cornerRadius = 5;
+    torreLabel.thickness = 1;
+    torreLabel.color = "black";
+    torreLabel.alpha = 0.8;
+    advancedTexture.addControl(torreLabel);
 
-  torreLabel.linkWithMesh(torreMesh); // Enlaza el texto con la torre
-  torreLabel.linkOffsetY = -200; // Eleva el texto visualmente sobre la torre
+    const torreText = new BABYLON.GUI.TextBlock();
+    torreText.text = "Torre";
+    torreText.color = "black";
+    torreText.fontSize = 14;
+    torreLabel.addControl(torreText);
 
-  const torreLine = new BABYLON.GUI.Line();
-torreLine.lineWidth = 2;
-torreLine.color = "black";
-torreLine.alpha = 0.8;
-advancedTexture.addControl(torreLine);
+    // Posicionar nodo arriba de la torre
+    const torreTop = torreMesh.getBoundingInfo().boundingBox.centerWorld.clone();
+    torreTop.y += torreMesh.getBoundingInfo().boundingBox.extendSize.y;
 
-// Enlazar ambos extremos de la línea
-torreLine.linkWithMesh(torreMesh); // Un extremo a la torre
-torreLine.connectedControl = torreLabel; // Extremo UI
-torreLine.connectionPoint = new BABYLON.Vector2(0, 1); // conecta abajo del texto
+    const torreTarget = new BABYLON.TransformNode("torreTarget", scene);
+    torreTarget.position = torreTop;
 
-} else {
-  console.warn("No se encontró una malla con 'torre' en el nombre.");
-}
+    // Conectar etiqueta con nodo elevado
+    torreLabel.linkWithMesh(torreTarget);
+    torreLabel.linkOffsetY = -20;
+
+    // Crear línea desde la torre real hasta el texto
+    const torreLine = new BABYLON.GUI.Line();
+    torreLine.lineWidth = 2;
+    torreLine.color = "black";
+    torreLine.alpha = 0.8;
+    advancedTexture.addControl(torreLine);
+
+    torreLine.linkWithMesh(torreMesh);           // extremo en la torre
+    torreLine.connectedControl = torreLabel;     // extremo en el texto
+    torreLine.connectionPoint = new BABYLON.Vector2(0, -1); // conecta parte superior del texto
+  } else {
+    console.warn("No se encontró una malla con 'torre' en el nombre.");
+  }
+
+  // Ajustar cámara al modelo completo
+  const meshes = scene.meshes;
+  if (meshes.length > 0) {
+    const boundingInfo = meshes[0].getHierarchyBoundingVectors();
+    const center = boundingInfo.min.add(boundingInfo.max).scale(0.5);
+    camera.setTarget(center);
+    camera.radius = BABYLON.Vector3.Distance(boundingInfo.min, boundingInfo.max) * 1.5;
+  }
+}, null, (scene, message, exception) => {
+  console.error("Error cargando modelo:", message, exception);
+});
+
 
       const meshes = scene.meshes;
 if (meshes.length > 0) {
