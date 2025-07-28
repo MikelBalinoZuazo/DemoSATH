@@ -95,49 +95,46 @@
 
     BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
       console.log("Modelo cargado con materiales originales.");
-// Crear GUI avanzada
+      // Crear GUI avanzada
 const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-// Crear etiqueta
-const torreLabel = new BABYLON.GUI.Rectangle("torreLabel");
-torreLabel.background = "#ffffffcc";
-torreLabel.height = "30px";
-torreLabel.width = "100px";
-torreLabel.cornerRadius = 5;
-torreLabel.thickness = 1;
-torreLabel.color = "black";
-torreLabel.alpha = 0.8;
-advancedTexture.addControl(torreLabel);
+// Suponiendo que la torre es el primer mesh del modelo (ajusta si es otro)
+const torreMesh = scene.meshes.find(m => m.name.toLowerCase().includes("torre") || m.name.toLowerCase().includes("tower"));
 
-const torreText = new BABYLON.GUI.TextBlock();
-torreText.text = "Torre";
-torreText.color = "black";
-torreText.fontSize = 14;
-torreLabel.addControl(torreText);
+if (torreMesh) {
+  const torreLabel = new BABYLON.GUI.Rectangle("torreLabel");
+  torreLabel.background = "#ffffffcc";
+  torreLabel.height = "30px";
+  torreLabel.alpha = 0.8;
+  torreLabel.width = "100px";
+  torreLabel.cornerRadius = 5;
+  torreLabel.thickness = 1;
+  torreLabel.color = "black";
+  advancedTexture.addControl(torreLabel);
 
-// Crear nodo encima de la torre
-const torreTop = torreMesh.getBoundingInfo().boundingBox.centerWorld.clone();
-torreTop.y += torreMesh.getBoundingInfo().boundingBox.extendSize.y;
+  const torreText = new BABYLON.GUI.TextBlock();
+  torreText.text = "Torre";
+  torreText.color = "black";
+  torreText.fontSize = 14;
+  torreLabel.addControl(torreText);
 
-const torreTarget = new BABYLON.TransformNode("torreTarget", scene);
-torreTarget.position = torreTop;
+  torreLabel.linkWithMesh(torreMesh); // Enlaza el texto con la torre
+  torreLabel.linkOffsetY = -200; // Eleva el texto visualmente sobre la torre
 
-// Enlazar etiqueta con nodo elevado
-torreLabel.linkWithMesh(torreTarget);
-torreLabel.linkOffsetY = -20; // pequeño desplazamiento sobre el punto
-
-// Crear línea
-const torreLine = new BABYLON.GUI.Line();
+  const torreLine = new BABYLON.GUI.Line();
 torreLine.lineWidth = 2;
 torreLine.color = "black";
 torreLine.alpha = 0.8;
 advancedTexture.addControl(torreLine);
 
-// Conectar la línea desde la torre al texto
-torreLine.linkWithMesh(torreMesh); // desde el modelo
-torreLine.connectedControl = torreLabel;
-torreLine.connectionPoint = new BABYLON.Vector2(0, -1); // conecta arriba de la etiqueta
+// Enlazar ambos extremos de la línea
+torreLine.linkWithMesh(torreMesh); // Un extremo a la torre
+torreLine.connectedControl = torreLabel; // Extremo UI
+torreLine.connectionPoint = new BABYLON.Vector2(0, 1); // conecta abajo del texto
 
+} else {
+  console.warn("No se encontró una malla con 'torre' en el nombre.");
+}
 
       const meshes = scene.meshes;
 if (meshes.length > 0) {
