@@ -68,6 +68,7 @@
 
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
   <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+  <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
 
   <script>
     const canvas = document.getElementById("renderCanvas");
@@ -94,6 +95,34 @@
 
     BABYLON.SceneLoader.Append("./", "modelo.glb", scene, () => {
       console.log("Modelo cargado con materiales originales.");
+      // Crear GUI avanzada
+const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+// Suponiendo que la torre es el primer mesh del modelo (ajusta si es otro)
+const torreMesh = scene.meshes.find(m => m.name.toLowerCase().includes("torre") || m.name.toLowerCase().includes("tower"));
+
+if (torreMesh) {
+  const torreLabel = new BABYLON.GUI.Rectangle("torreLabel");
+  torreLabel.background = "#ffffffcc";
+  torreLabel.height = "30px";
+  torreLabel.alpha = 0.8;
+  torreLabel.width = "100px";
+  torreLabel.cornerRadius = 5;
+  torreLabel.thickness = 1;
+  torreLabel.color = "black";
+  advancedTexture.addControl(torreLabel);
+
+  const torreText = new BABYLON.GUI.TextBlock();
+  torreText.text = "Torre";
+  torreText.color = "black";
+  torreText.fontSize = 14;
+  torreLabel.addControl(torreText);
+
+  torreLabel.linkWithMesh(torreMesh); // Enlaza el texto con la torre
+  torreLabel.linkOffsetY = -50; // Eleva el texto visualmente sobre la torre
+} else {
+  console.warn("No se encontró una malla con 'torre' en el nombre.");
+}
 
       const meshes = scene.meshes;
 if (meshes.length > 0) {
